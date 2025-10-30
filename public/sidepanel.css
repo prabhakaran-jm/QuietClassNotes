@@ -222,9 +222,23 @@ kbd {
   margin-bottom: 8px;
 }
 
+.button.secondary {
+  background: var(--primary-bg);
+  border-color: var(--primary-border);
+}
+
+.button.secondary:hover {
+  background: var(--primary-hover);
+}
+
 .button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.button:disabled:hover {
+  background: white;
+  border-color: var(--primary-border);
 }
 
 .spinner {
@@ -246,5 +260,51 @@ kbd {
 .output.loading {
   color: var(--text-secondary);
   font-style: italic;
+}
+
+.output.error {
+  background: rgba(220, 38, 38, 0.1);
+  border-color: rgba(220, 38, 38, 0.3);
+  color: #dc2626;
+}
+
+.output.error::before {
+  content: '⚠️ ';
+  margin-right: 4px;
+}
+
+.toast {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: white;
+  border: 1px solid var(--primary-border);
+  border-radius: 6px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  z-index: 10001;
+  animation: slideIn 0.3s ease-out;
+  max-width: 300px;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.toast.success {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+}
+
+.toast.error {
+  border-color: #dc2626;
+  background: rgba(220, 38, 38, 0.1);
 }
 

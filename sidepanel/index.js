@@ -12,6 +12,8 @@ const output = document.getElementById('output');
 const runBtn = document.getElementById('run');
 const copyBtn = document.getElementById('copy');
 const exportBtn = document.getElementById('export');
+const clearBtn = document.getElementById('clear');
+const useAsInputBtn = document.getElementById('useAsInput');
 const hybridToggle = document.getElementById('hybridToggle');
 const translateOptions = document.getElementById('translateOptions');
 const simplifyOptions = document.getElementById('simplifyOptions');
@@ -51,8 +53,23 @@ function updateTabUI() {
   // Show/hide options based on active tab
   translateOptions.style.display = activeTab === 'translate' ? 'block' : 'none';
   simplifyOptions.style.display = activeTab === 'simplify' ? 'block' : 'none';
-  // Show export button when there's output
-  exportBtn.style.display = output.textContent.trim() ? 'inline-block' : 'none';
+  // Show export and use as input buttons when there's output
+  const hasOutput = output.textContent.trim() && !output.classList.contains('error');
+  exportBtn.style.display = hasOutput ? 'inline-block' : 'none';
+  useAsInputBtn.style.display = hasOutput ? 'inline-block' : 'none';
+}
+
+// Toast notification helper
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  toast.textContent = message;
+  document.body.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.animation = 'slideIn 0.3s ease-out reverse';
+    setTimeout(() => toast.remove(), 300);
+  }, 3000);
 }
 
 tabs.forEach(t => t.addEventListener('click', () => {
@@ -111,14 +128,31 @@ runBtn.addEventListener('click', async () => {
     }
     
     output.textContent = result;
-    output.classList.remove('loading');
+    output.classList.remove('loading', 'error');
     // Show export button after successful run
     updateTabUI();
+    showToast(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} completed successfully`, 'success');
   } catch (e) {
     console.error(e);
-    output.textContent = `Error: ${e?.message || e}`;
+    const errorMsg = e?.message || String(e);
+    let userMessage = `Error: ${errorMsg}`;
+    
+    // Provide helpful error messages
+    if (errorMsg.includes('not available') || errorMsg.includes('unavailable')) {
+      if (hybrid) {
+        userMessage = `On-device AI unavailable.\n\nTry:\n• Check Chrome Built-in AI availability\n• Enable Hybrid mode (if not already)\n• Ensure you have an internet connection for cloud fallback`;
+      } else {
+        userMessage = `AI feature not available.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Ensure Chrome Built-in AI is enabled\n• Check your Chrome version (requires Chrome 130+)`;
+      }
+    } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
+      userMessage = `Network error occurred.\n\nTry:\n• Check your internet connection\n• Retry the operation\n• Ensure Hybrid mode is enabled for cloud fallback`;
+    }
+    
+    output.textContent = userMessage;
+    output.classList.add('error');
     output.classList.remove('loading');
     updateTabUI();
+    showToast('Processing failed. See output for details.', 'error');
   } finally {
     // Reset loading state
     runBtn.disabled = false;
@@ -128,12 +162,38 @@ runBtn.addEventListener('click', async () => {
   }
 });
 
+// Clear input button
+clearBtn.addEventListener('click', () => {
+  input.value = '';
+  updateStats();
+  input.focus();
+  showToast('Input cleared', 'success');
+});
+
+// Use output as input
+useAsInputBtn.addEventListener('click', () => {
+  const outputText = output.textContent.trim();
+  if (!outputText || output.classList.contains('error')) return;
+  
+  input.value = outputText;
+  output.textContent = '';
+  updateStats();
+  updateTabUI();
+  input.focus();
+  showToast('Output used as new input', 'success');
+});
+
 copyBtn.addEventListener('click', async () => {
   const text = output.textContent;
-  if (!text) return;
-  await navigator.clipboard.writeText(text);
-  copyBtn.textContent = 'Copied!';
-  setTimeout(() => (copyBtn.textContent = 'Copy Output'), 1000);
+  if (!text || output.classList.contains('error')) return;
+  try {
+    await navigator.clipboard.writeText(text);
+    copyBtn.textContent = 'Copied!';
+    showToast('Copied to clipboard', 'success');
+    setTimeout(() => (copyBtn.textContent = 'Copy Output'), 1000);
+  } catch (e) {
+    showToast('Failed to copy', 'error');
+  }
 });
 
 // Export functionality
