@@ -18,13 +18,31 @@ function createChips() {
   wrap.id = IDS.WRAP;
   Object.assign(wrap.style, {
     position: 'absolute', zIndex: 2147483647, display: 'none', gap: '6px', flexDirection: 'row',
-    background: 'rgba(0,0,0,0.75)', color: '#fff', padding: '6px', borderRadius: '8px'
+    background: 'rgba(0,0,0,0.85)', color: '#fff', padding: '8px', borderRadius: '10px',
+    boxShadow: '0 4px 12px rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)'
   });
 
   const mk = (id, label) => {
     const b = document.createElement('button');
     b.id = id; b.textContent = label;
-    Object.assign(b.style, { background: 'transparent', color: 'white', border: '1px solid #aaa', padding: '4px 6px', borderRadius: '6px', cursor: 'pointer' });
+    Object.assign(b.style, { 
+      background: 'transparent', 
+      color: 'white', 
+      border: '1px solid #aaa', 
+      padding: '4px 8px', 
+      borderRadius: '6px', 
+      cursor: 'pointer',
+      transition: 'all 0.2s',
+      fontSize: '12px'
+    });
+    b.addEventListener('mouseenter', () => {
+      b.style.background = 'rgba(255,255,255,0.2)';
+      b.style.borderColor = '#fff';
+    });
+    b.addEventListener('mouseleave', () => {
+      b.style.background = 'transparent';
+      b.style.borderColor = '#aaa';
+    });
     return b;
   };
 

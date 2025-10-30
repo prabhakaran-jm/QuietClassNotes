@@ -18,11 +18,34 @@ const simplifyOptions = document.getElementById('simplifyOptions');
 const targetLanguage = document.getElementById('targetLanguage');
 const rewriteMode = document.getElementById('rewriteMode');
 
+// Load saved preferences
 (async () => {
   badge.textContent = await getAIAvailabilityBadge();
   const savedHybrid = await getPreference('hybrid');
   hybridToggle.checked = !!savedHybrid;
+  
+  // Load saved language and mode preferences
+  const savedTargetLang = await getPreference('targetLanguage');
+  if (savedTargetLang) targetLanguage.value = savedTargetLang;
+  
+  const savedMode = await getPreference('rewriteMode');
+  if (savedMode) rewriteMode.value = savedMode;
 })();
+
+// Character and word count
+const charCount = document.getElementById('charCount');
+const wordCount = document.getElementById('wordCount');
+
+function updateStats() {
+  const text = input.value;
+  const chars = text.length;
+  const words = text.trim() ? text.trim().split(/\s+/).length : 0;
+  charCount.textContent = chars;
+  wordCount.textContent = words;
+}
+
+input.addEventListener('input', updateStats);
+updateStats();
 
 function updateTabUI() {
   // Show/hide options based on active tab
@@ -41,31 +64,67 @@ tabs.forEach(t => t.addEventListener('click', () => {
 
 hybridToggle.addEventListener('change', () => setPreference('hybrid', hybridToggle.checked));
 
+// Save preferences when language/mode changes
+targetLanguage.addEventListener('change', () => setPreference('targetLanguage', targetLanguage.value));
+rewriteMode.addEventListener('change', () => setPreference('rewriteMode', rewriteMode.value));
+
+// Keyboard shortcuts
+input.addEventListener('keydown', (e) => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    runBtn.click();
+  }
+});
+
 runBtn.addEventListener('click', async () => {
   const text = input.value.trim();
-  if (!text) { output.textContent = 'No input text.'; return; }
+  if (!text) { 
+    output.textContent = 'No input text.'; 
+    output.classList.remove('loading');
+    return; 
+  }
+  
+  // Set loading state
+  runBtn.disabled = true;
+  const runText = document.getElementById('runText');
+  const runSpinner = document.getElementById('runSpinner');
+  runText.textContent = 'Processing…';
+  runSpinner.style.display = 'inline-block';
   output.textContent = 'Working…';
+  output.classList.add('loading');
+  copyBtn.disabled = true;
 
   const hybrid = await getPreference('hybrid');
 
   try {
+    let result;
     if (activeTab === 'summarize') {
-      output.textContent = await Summarizer.summarize(text, { hybrid });
+      result = await Summarizer.summarize(text, { hybrid });
     } else if (activeTab === 'simplify') {
       const mode = rewriteMode.value;
-      output.textContent = await Rewriter.rewrite(text, { mode, hybrid });
+      result = await Rewriter.rewrite(text, { mode, hybrid });
     } else if (activeTab === 'translate') {
       const target = targetLanguage.value;
-      output.textContent = await Translator.translate(text, { target, hybrid });
+      result = await Translator.translate(text, { target, hybrid });
     } else if (activeTab === 'proofread') {
-      output.textContent = await Proofreader.proofread(text, { hybrid });
+      result = await Proofreader.proofread(text, { hybrid });
     }
+    
+    output.textContent = result;
+    output.classList.remove('loading');
     // Show export button after successful run
     updateTabUI();
   } catch (e) {
     console.error(e);
     output.textContent = `Error: ${e?.message || e}`;
+    output.classList.remove('loading');
     updateTabUI();
+  } finally {
+    // Reset loading state
+    runBtn.disabled = false;
+    runText.textContent = 'Run';
+    runSpinner.style.display = 'none';
+    copyBtn.disabled = false;
   }
 });
 

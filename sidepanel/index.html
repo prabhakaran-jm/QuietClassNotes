@@ -23,6 +23,9 @@
 
     <div class="section">
       <textarea id="input" class="textarea" placeholder="Paste or select text on the page and click a chip…"></textarea>
+      <div class="input-stats" id="inputStats">
+        <span id="charCount">0</span> characters · <span id="wordCount">0</span> words
+      </div>
       
       <!-- Options for Translate tab -->
       <div id="translateOptions" class="options" style="display: none;">
@@ -55,7 +58,10 @@
       </div>
       
       <div class="actions">
-        <button id="run" class="button">Run</button>
+        <button id="run" class="button">
+          <span id="runText">Run</span>
+          <span id="runSpinner" class="spinner" style="display: none;"></span>
+        </button>
         <button id="copy" class="button">Copy Output</button>
         <button id="export" class="button" style="display: none;">Export</button>
       </div>
@@ -65,6 +71,7 @@
 
     <div class="footer">
       <span class="small">On-device by default. Toggle Hybrid to allow cloud fallback.</span>
+      <span class="small" style="display: block; margin-top: 4px;">Press <kbd>Ctrl+Enter</kbd> to run</span>
     </div>
 
     <script type="module" src="./index.js"></script>
