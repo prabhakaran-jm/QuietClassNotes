@@ -11,7 +11,12 @@ const input = document.getElementById('input');
 const output = document.getElementById('output');
 const runBtn = document.getElementById('run');
 const copyBtn = document.getElementById('copy');
+const exportBtn = document.getElementById('export');
 const hybridToggle = document.getElementById('hybridToggle');
+const translateOptions = document.getElementById('translateOptions');
+const simplifyOptions = document.getElementById('simplifyOptions');
+const targetLanguage = document.getElementById('targetLanguage');
+const rewriteMode = document.getElementById('rewriteMode');
 
 (async () => {
   badge.textContent = await getAIAvailabilityBadge();
@@ -19,10 +24,19 @@ const hybridToggle = document.getElementById('hybridToggle');
   hybridToggle.checked = !!savedHybrid;
 })();
 
+function updateTabUI() {
+  // Show/hide options based on active tab
+  translateOptions.style.display = activeTab === 'translate' ? 'block' : 'none';
+  simplifyOptions.style.display = activeTab === 'simplify' ? 'block' : 'none';
+  // Show export button when there's output
+  exportBtn.style.display = output.textContent.trim() ? 'inline-block' : 'none';
+}
+
 tabs.forEach(t => t.addEventListener('click', () => {
   tabs.forEach(x => x.classList.remove('active'));
   t.classList.add('active');
   activeTab = t.dataset.tab;
+  updateTabUI();
 }));
 
 hybridToggle.addEventListener('change', () => setPreference('hybrid', hybridToggle.checked));
@@ -38,15 +52,20 @@ runBtn.addEventListener('click', async () => {
     if (activeTab === 'summarize') {
       output.textContent = await Summarizer.summarize(text, { hybrid });
     } else if (activeTab === 'simplify') {
-      output.textContent = await Rewriter.rewrite(text, { mode: 'beginner', hybrid });
+      const mode = rewriteMode.value;
+      output.textContent = await Rewriter.rewrite(text, { mode, hybrid });
     } else if (activeTab === 'translate') {
-      output.textContent = await Translator.translate(text, { target: 'en', hybrid });
+      const target = targetLanguage.value;
+      output.textContent = await Translator.translate(text, { target, hybrid });
     } else if (activeTab === 'proofread') {
       output.textContent = await Proofreader.proofread(text, { hybrid });
     }
+    // Show export button after successful run
+    updateTabUI();
   } catch (e) {
     console.error(e);
     output.textContent = `Error: ${e?.message || e}`;
+    updateTabUI();
   }
 });
 
@@ -58,18 +77,116 @@ copyBtn.addEventListener('click', async () => {
   setTimeout(() => (copyBtn.textContent = 'Copy Output'), 1000);
 });
 
+// Export functionality
+exportBtn.addEventListener('click', () => {
+  const text = output.textContent;
+  if (!text) return;
+  
+  const timestamp = new Date().toISOString().slice(0, 19).replace(/:/g, '-');
+  const inputText = input.value.trim();
+  
+  // Create export data
+  const exportData = {
+    type: activeTab,
+    timestamp,
+    input: inputText,
+    output: text,
+    options: activeTab === 'translate' ? { target: targetLanguage.value } :
+             activeTab === 'simplify' ? { mode: rewriteMode.value } : {}
+  };
+  
+  // Show menu options
+  const menu = document.createElement('div');
+  menu.className = 'export-menu';
+  menu.style.display = 'block';
+  
+  const jsonBtn = document.createElement('button');
+  jsonBtn.textContent = 'Export as JSON';
+  jsonBtn.onclick = () => {
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quietclass-notes-${activeTab}-${timestamp}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    menu.remove();
+  };
+  
+  const mdBtn = document.createElement('button');
+  mdBtn.textContent = 'Export as Markdown';
+  mdBtn.onclick = () => {
+    const md = `# ${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Result\n\n` +
+               `**Timestamp:** ${new Date(exportData.timestamp.replace(/-/g, ':')).toLocaleString()}\n\n` +
+               `## Input\n\n${exportData.input}\n\n` +
+               `## Output\n\n${exportData.output}\n`;
+    const blob = new Blob([md], { type: 'text/markdown' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `quietclass-notes-${activeTab}-${timestamp}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    menu.remove();
+  };
+  
+  menu.appendChild(jsonBtn);
+  menu.appendChild(mdBtn);
+  
+  // Position menu near export button
+  const rect = exportBtn.getBoundingClientRect();
+  menu.style.position = 'fixed';
+  menu.style.top = `${rect.bottom + 4}px`;
+  menu.style.left = `${rect.left}px`;
+  menu.style.zIndex = '10000';
+  
+  document.body.appendChild(menu);
+  
+  // Close menu when clicking outside
+  setTimeout(() => {
+    const closeMenu = (e) => {
+      if (!menu.contains(e.target) && e.target !== exportBtn) {
+        menu.remove();
+        document.removeEventListener('click', closeMenu);
+      }
+    };
+    document.addEventListener('click', closeMenu);
+  }, 0);
+});
+
 // Receive selected text from content script or service worker
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === 'QCN_SELECTED_TEXT') {
     input.value = msg.text || '';
+    // Auto-select the corresponding tab if provided
+    if (msg.tab) {
+      const tabToActivate = Array.from(tabs).find(t => t.dataset.tab === msg.tab);
+      if (tabToActivate) {
+        tabs.forEach(x => x.classList.remove('active'));
+        tabToActivate.classList.add('active');
+        activeTab = msg.tab;
+        updateTabUI();
+      }
+    }
   }
 });
 
 // Also check storage on load for recently selected text
 (async () => {
-  const stored = await chrome.storage.local.get('lastSelectedText');
+  const stored = await chrome.storage.local.get(['lastSelectedText', 'lastSelectedTab']);
   if (stored.lastSelectedText && !input.value) {
     input.value = stored.lastSelectedText;
+      // Auto-select tab if available
+      if (stored.lastSelectedTab) {
+        const tabToActivate = Array.from(tabs).find(t => t.dataset.tab === stored.lastSelectedTab);
+        if (tabToActivate) {
+          tabs.forEach(x => x.classList.remove('active'));
+          tabToActivate.classList.add('active');
+          activeTab = stored.lastSelectedTab;
+          updateTabUI();
+        }
+      }
   }
+  updateTabUI();
 })();
 

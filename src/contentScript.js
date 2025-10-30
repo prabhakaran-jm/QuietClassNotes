@@ -6,6 +6,13 @@ const IDS = {
   PRF: 'qcn-prf'
 };
 
+const CHIP_TO_TAB = {
+  [IDS.SUM]: 'summarize',
+  [IDS.SIM]: 'simplify',
+  [IDS.TRN]: 'translate',
+  [IDS.PRF]: 'proofread'
+};
+
 function createChips() {
   const wrap = document.createElement('div');
   wrap.id = IDS.WRAP;
@@ -72,9 +79,19 @@ function sendSelectedText() {
 
 wrap.addEventListener('click', (e) => {
   const id = e.target?.id;
-  if (!id) return;
-  sendSelectedText();
-  // Side panel will use current tab selection
+  if (!id || !CHIP_TO_TAB[id]) return;
+  const text = getSelectionText();
+  if (!text) return;
+  
+  // Send selected text with the tab to activate
+  const tabToActivate = CHIP_TO_TAB[id];
+  chrome.runtime.sendMessage({ 
+    type: 'QCN_SELECTED_TEXT', 
+    text,
+    tab: tabToActivate
+  });
+  
+  // Open side panel
   chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT }).catch(()=>{});
 });
 

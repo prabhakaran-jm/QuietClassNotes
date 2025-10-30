@@ -5,8 +5,11 @@ chrome.runtime.onInstalled.addListener(() => {
 // Handle messages from content script and store for side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.type === 'QCN_SELECTED_TEXT') {
-    // Store the selected text so side panel can retrieve it
-    chrome.storage.local.set({ lastSelectedText: message.text }).catch(() => {});
+    // Store the selected text and tab so side panel can retrieve it
+    chrome.storage.local.set({ 
+      lastSelectedText: message.text,
+      lastSelectedTab: message.tab || null
+    }).catch(() => {});
     // Also try to send directly if side panel is listening
     chrome.runtime.sendMessage(message).catch(() => {});
     sendResponse({ success: true });

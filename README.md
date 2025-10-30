@@ -13,11 +13,10 @@ Privacy-first classroom companion for the web. Summarize, simplify, translate, a
 ## Install (Developer Mode)
 
 1. Clone/download this repo
-2. **Replace placeholder icons**: The `public/icons/` folder contains empty placeholder files. Replace `icon16.png`, `icon48.png`, and `icon128.png` with actual PNG images (you can use any image editor or online tool).
-3. Open Chrome → `chrome://extensions`
-4. Toggle **Developer mode** (top-right)
-5. Click **Load unpacked** → select the repo folder
-6. Pin the extension and open the side panel
+2. Open Chrome → `chrome://extensions`
+3. Toggle **Developer mode** (top-right)
+4. Click **Load unpacked** → select the repo folder
+5. Pin the extension and open the side panel
 
 ## Usage
 

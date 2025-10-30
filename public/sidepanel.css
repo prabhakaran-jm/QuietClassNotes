@@ -26,3 +26,13 @@ body { font: 14px/1.4 system-ui, sans-serif; margin: 0; }
 
 .small { font-size:12px; color:#666; }
 
+.options { margin-top: 8px; margin-bottom: 8px; }
+
+.select { padding: 4px 8px; border-radius: 4px; border: 1px solid #888; margin-left: 6px; }
+
+.export-menu { display: none; position: absolute; background: white; border: 1px solid #ddd; border-radius: 4px; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+.export-menu button { display: block; width: 100%; padding: 6px 12px; text-align: left; border: none; background: transparent; cursor: pointer; }
+
+.export-menu button:hover { background: #f0f0f0; }
+
