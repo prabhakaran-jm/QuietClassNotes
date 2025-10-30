@@ -30,3 +30,7 @@ npm-debug.log*
 # Extension store files (if uploading)
 *.pem
 
+# Local helper files (not needed in repo)
+public/icons/create-icons.md
+public/icons/icon-generator.html
+
