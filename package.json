@@ -1,0 +1,24 @@
+{
+  "name": "quietclass-notes",
+  "version": "0.1.0",
+  "description": "Privacy-first classroom companion with on-device AI",
+  "type": "module",
+  "scripts": {
+    "build": "echo 'No build step required - plain ES modules'",
+    "test": "echo 'Add tests here'"
+  },
+  "keywords": [
+    "chrome-extension",
+    "education",
+    "ai",
+    "privacy",
+    "on-device"
+  ],
+  "author": "Prabhakaran J M",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/quietclass-notes.git"
+  }
+}
+
