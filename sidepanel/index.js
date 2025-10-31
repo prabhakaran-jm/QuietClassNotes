@@ -138,7 +138,7 @@ runBtn.addEventListener('click', async () => {
     updateTabUI();
     showToast(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} completed successfully`, 'success');
   } catch (e) {
-    console.error(e);
+    console.error('[QCN] Error in AI processing:', e);
     const errorMsg = e?.message || String(e);
     let userMessage = `Error: ${errorMsg}`;
     
@@ -149,6 +149,8 @@ runBtn.addEventListener('click', async () => {
       } else {
         userMessage = `AI feature not available.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Ensure Chrome Built-in AI is enabled\n• Check your Chrome version (requires Chrome 130+)`;
       }
+    } else if (errorMsg.includes('timeout')) {
+      userMessage = `Operation timed out.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Try with shorter text\n• Check if the API is responding`;
     } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
       userMessage = `Network error occurred.\n\nTry:\n• Check your internet connection\n• Retry the operation\n• Ensure Hybrid mode is enabled for cloud fallback`;
     }
@@ -159,11 +161,13 @@ runBtn.addEventListener('click', async () => {
     updateTabUI();
     showToast('Processing failed. See output for details.', 'error');
   } finally {
-    // Reset loading state
+    // Always reset loading state, even if there was an error
     runBtn.disabled = false;
     runText.textContent = 'Run';
     runSpinner.style.display = 'none';
     copyBtn.disabled = false;
+    // Ensure loading class is removed from output
+    output.classList.remove('loading');
   }
 });
 
