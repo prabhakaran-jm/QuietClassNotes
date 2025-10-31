@@ -281,12 +281,17 @@ exportBtn.addEventListener('click', () => {
 chrome.runtime.onMessage.addListener((msg) => {
   if (msg?.type === 'QCN_SELECTED_TEXT') {
     input.value = msg.text || '';
+    updateStats(); // Update character/word count
     // Auto-select the corresponding tab if provided
     if (msg.tab) {
       const tabToActivate = Array.from(tabs).find(t => t.dataset.tab === msg.tab);
       if (tabToActivate) {
-        tabs.forEach(x => x.classList.remove('active'));
+        tabs.forEach(x => {
+          x.classList.remove('active');
+          x.setAttribute('aria-selected', 'false');
+        });
         tabToActivate.classList.add('active');
+        tabToActivate.setAttribute('aria-selected', 'true');
         activeTab = msg.tab;
         updateTabUI();
       }
@@ -299,12 +304,17 @@ chrome.runtime.onMessage.addListener((msg) => {
   const stored = await chrome.storage.local.get(['lastSelectedText', 'lastSelectedTab']);
   if (stored.lastSelectedText && !input.value) {
     input.value = stored.lastSelectedText;
+    updateStats(); // Update character/word count
       // Auto-select tab if available
       if (stored.lastSelectedTab) {
         const tabToActivate = Array.from(tabs).find(t => t.dataset.tab === stored.lastSelectedTab);
         if (tabToActivate) {
-          tabs.forEach(x => x.classList.remove('active'));
+          tabs.forEach(x => {
+            x.classList.remove('active');
+            x.setAttribute('aria-selected', 'false');
+          });
           tabToActivate.classList.add('active');
+          tabToActivate.setAttribute('aria-selected', 'true');
           activeTab = stored.lastSelectedTab;
           updateTabUI();
         }
