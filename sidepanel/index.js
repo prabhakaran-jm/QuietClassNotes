@@ -109,11 +109,11 @@ runBtn.addEventListener('click', async () => {
   runBtn.disabled = true;
   const runText = document.getElementById('runText');
   const runSpinner = document.getElementById('runSpinner');
-    runText.textContent = 'Processing…';
-    runSpinner.style.display = 'inline-block';
-    output.textContent = 'Working…';
-    output.classList.add('loading');
-    output.classList.remove('error');
+  runText.textContent = 'Processing…';
+  runSpinner.style.display = 'inline-block';
+  output.textContent = 'Working…';
+  output.classList.add('loading');
+  output.classList.remove('error');
   copyBtn.disabled = true;
 
   const hybrid = await getPreference('hybrid');
