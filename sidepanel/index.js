@@ -99,12 +99,12 @@ input.addEventListener('keydown', (e) => {
 
 runBtn.addEventListener('click', async () => {
   const text = input.value.trim();
-  if (!text) { 
-    output.textContent = 'No input text.'; 
+  if (!text) {
+    output.textContent = 'No input text.';
     output.classList.remove('loading');
-    return; 
+    return;
   }
-  
+
   // Set loading state
   runBtn.disabled = true;
   const runText = document.getElementById('runText');
@@ -117,6 +117,23 @@ runBtn.addEventListener('click', async () => {
   copyBtn.disabled = true;
 
   const hybrid = await getPreference('hybrid');
+
+  // Defensive UI timeout - ensures UI always resets even if API hangs
+  // This is a safety net on top of the API-level timeout
+  // Set to 60 seconds to allow APIs to complete normally - this is ONLY for catastrophic failures
+  const UI_TIMEOUT_MS = 60000; // 60 seconds (safety net for complete API failure)
+  let uiTimeoutFired = false;
+  const uiTimeout = setTimeout(() => {
+    uiTimeoutFired = true;
+    console.error('[QCN UI] Defensive timeout fired after 60 seconds - force resetting UI');
+    runBtn.disabled = false;
+    runText.textContent = 'Run';
+    runSpinner.style.display = 'none';
+    copyBtn.disabled = false;
+    output.classList.remove('loading');
+    output.classList.add('error');
+    output.textContent = 'Operation timed out at UI level (60 seconds).\n\nThis should not happen. The API may be completely unresponsive.\n\nTry:\n• Refresh the extension\n• Reload Chrome\n• Check console for errors';
+  }, UI_TIMEOUT_MS);
 
   try {
     let result;
@@ -131,17 +148,32 @@ runBtn.addEventListener('click', async () => {
     } else if (activeTab === 'proofread') {
       result = await Proofreader.proofread(text, { hybrid });
     }
-    
-    output.textContent = result;
-    output.classList.remove('loading', 'error');
-    // Show export button after successful run
-    updateTabUI();
-    showToast(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} completed successfully`, 'success');
+
+    // Clear defensive timeout if operation completed
+    clearTimeout(uiTimeout);
+
+    if (!uiTimeoutFired) {
+      output.textContent = result;
+      output.classList.remove('loading', 'error');
+      // Show export button after successful run
+      updateTabUI();
+      showToast(`${activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} completed successfully`, 'success');
+    } else {
+      console.warn('[QCN UI] Operation completed but UI timeout already fired');
+    }
   } catch (e) {
+    // Clear defensive timeout if error occurred
+    clearTimeout(uiTimeout);
+
+    if (uiTimeoutFired) {
+      console.warn('[QCN UI] Error caught but UI timeout already fired');
+      return; // UI already reset by timeout
+    }
+
     console.error('[QCN] Error in AI processing:', e);
     const errorMsg = e?.message || String(e);
     let userMessage = `Error: ${errorMsg}`;
-    
+
     // Provide helpful error messages
     if (errorMsg.includes('not available') || errorMsg.includes('unavailable')) {
       if (hybrid) {
@@ -149,25 +181,30 @@ runBtn.addEventListener('click', async () => {
       } else {
         userMessage = `AI feature not available.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Ensure Chrome Built-in AI is enabled\n• Check your Chrome version (requires Chrome 130+)`;
       }
-    } else if (errorMsg.includes('timeout')) {
+    } else if (errorMsg.includes('timeout') || errorMsg.includes('TIMEOUT')) {
       userMessage = `Operation timed out.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Try with shorter text\n• Check if the API is responding`;
     } else if (errorMsg.includes('network') || errorMsg.includes('fetch')) {
       userMessage = `Network error occurred.\n\nTry:\n• Check your internet connection\n• Retry the operation\n• Ensure Hybrid mode is enabled for cloud fallback`;
     }
-    
+
     output.textContent = userMessage;
     output.classList.add('error');
     output.classList.remove('loading');
     updateTabUI();
     showToast('Processing failed. See output for details.', 'error');
   } finally {
+    // Clear defensive timeout
+    clearTimeout(uiTimeout);
+
     // Always reset loading state, even if there was an error
-    runBtn.disabled = false;
-    runText.textContent = 'Run';
-    runSpinner.style.display = 'none';
-    copyBtn.disabled = false;
-    // Ensure loading class is removed from output
-    output.classList.remove('loading');
+    if (!uiTimeoutFired) {
+      runBtn.disabled = false;
+      runText.textContent = 'Run';
+      runSpinner.style.display = 'none';
+      copyBtn.disabled = false;
+      // Ensure loading class is removed from output
+      output.classList.remove('loading');
+    }
   }
 });
 
