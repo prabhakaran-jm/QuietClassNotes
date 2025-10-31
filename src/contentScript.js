@@ -113,6 +113,13 @@ wrap.addEventListener('click', (e) => {
   
   console.log('[QCN] Chip clicked:', id, 'Text:', text.substring(0, 50));
   
+  // Check if extension runtime is available
+  if (!chrome?.runtime) {
+    console.error('[QCN] Extension runtime not available. Please reload the page after reloading the extension.');
+    alert('Extension context invalidated. Please reload this page (F5) to reconnect.');
+    return;
+  }
+  
   // Send selected text with the tab to activate and request side panel open
   const tabToActivate = CHIP_TO_TAB[id];
   
@@ -125,9 +132,10 @@ wrap.addEventListener('click', (e) => {
     }, (response) => {
       if (chrome.runtime.lastError) {
         // Extension context invalidated (reloaded) - reload page or re-register listener
-        if (chrome.runtime.lastError.message?.includes('Extension context invalidated')) {
+        if (chrome.runtime.lastError.message?.includes('Extension context invalidated') ||
+            chrome.runtime.lastError.message?.includes('message port closed')) {
           console.warn('[QCN] Extension context invalidated. Please reload the page.');
-          // Could show a message to user, but for now just log
+          alert('Extension was reloaded. Please reload this page (F5) to reconnect.');
         } else {
           console.error('[QCN] Message error:', chrome.runtime.lastError);
         }
@@ -138,8 +146,10 @@ wrap.addEventListener('click', (e) => {
   } catch (e) {
     // Extension context invalidated or other error
     if (e.message?.includes('Extension context invalidated') || 
-        e.message?.includes('message port closed')) {
-      console.warn('[QCN] Extension context invalidated. Please reload the page or reload the extension.');
+        e.message?.includes('message port closed') ||
+        e.message?.includes('sendMessage')) {
+      console.warn('[QCN] Extension context invalidated. Please reload the page.');
+      alert('Extension context invalidated. Please reload this page (F5).');
     } else {
       console.error('[QCN] Error sending message:', e);
     }
