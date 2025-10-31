@@ -1,3 +1,6 @@
+// Debug: Log that content script is loaded
+console.log('[QCN] Content script loaded. Chrome runtime:', typeof chrome !== 'undefined' ? 'available' : 'undefined');
+
 const IDS = {
   WRAP: 'qcn-wrap',
   SUM: 'qcn-sum',
@@ -125,19 +128,32 @@ wrap.addEventListener('click', (e) => {
   
   console.log('[QCN] Chip clicked:', id, 'Text:', text.substring(0, 50));
   
+  // Debug: Check chrome availability
+  console.log('[QCN] Debug - typeof chrome:', typeof chrome);
+  console.log('[QCN] Debug - chrome.runtime:', typeof chrome !== 'undefined' ? typeof chrome.runtime : 'N/A');
+  console.log('[QCN] Debug - chrome.runtime.sendMessage:', typeof chrome !== 'undefined' && chrome.runtime ? typeof chrome.runtime.sendMessage : 'N/A');
+  
   // Check if extension runtime is available
-  if (typeof chrome === 'undefined' || !chrome.runtime) {
-    console.error('[QCN] Extension runtime not available. Please reload the page after reloading the extension.');
+  if (typeof chrome === 'undefined') {
+    console.error('[QCN] Chrome is undefined! Extension may not be loaded. Reload extension and page.');
+    alert('Chrome extension API not available. Please:\n1. Go to chrome://extensions\n2. Reload QuietClass Notes\n3. Reload this page (F5)');
+    return;
+  }
+  
+  if (!chrome.runtime) {
+    console.error('[QCN] chrome.runtime is undefined! Extension context invalidated.');
     alert('Extension context invalidated. Please reload this page (F5) to reconnect.');
     return;
   }
   
   // Double-check sendMessage exists
   if (typeof chrome.runtime.sendMessage !== 'function') {
-    console.error('[QCN] chrome.runtime.sendMessage is not a function. Please reload the page.');
+    console.error('[QCN] chrome.runtime.sendMessage is not a function. Extension context invalidated.');
     alert('Extension context invalidated. Please reload this page (F5) to reconnect.');
     return;
   }
+  
+  console.log('[QCN] All checks passed, sending message...');
   
   // Send selected text with the tab to activate and request side panel open
   const tabToActivate = CHIP_TO_TAB[id];
