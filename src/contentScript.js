@@ -115,17 +115,34 @@ wrap.addEventListener('click', (e) => {
   
   // Send selected text with the tab to activate and request side panel open
   const tabToActivate = CHIP_TO_TAB[id];
-  chrome.runtime.sendMessage({ 
-    type: 'QCN_SELECTED_TEXT', 
-    text,
-    tab: tabToActivate,
-    openSidePanel: true  // Request side panel to open
-  }, (response) => {
-    if (chrome.runtime.lastError) {
-      console.error('[QCN] Message error:', chrome.runtime.lastError);
+  
+  try {
+    chrome.runtime.sendMessage({ 
+      type: 'QCN_SELECTED_TEXT', 
+      text,
+      tab: tabToActivate,
+      openSidePanel: true  // Request side panel to open
+    }, (response) => {
+      if (chrome.runtime.lastError) {
+        // Extension context invalidated (reloaded) - reload page or re-register listener
+        if (chrome.runtime.lastError.message?.includes('Extension context invalidated')) {
+          console.warn('[QCN] Extension context invalidated. Please reload the page.');
+          // Could show a message to user, but for now just log
+        } else {
+          console.error('[QCN] Message error:', chrome.runtime.lastError);
+        }
+      } else {
+        console.log('[QCN] Message sent:', response);
+      }
+    });
+  } catch (e) {
+    // Extension context invalidated or other error
+    if (e.message?.includes('Extension context invalidated') || 
+        e.message?.includes('message port closed')) {
+      console.warn('[QCN] Extension context invalidated. Please reload the page or reload the extension.');
     } else {
-      console.log('[QCN] Message sent:', response);
+      console.error('[QCN] Error sending message:', e);
     }
-  });
+  }
 });
 
