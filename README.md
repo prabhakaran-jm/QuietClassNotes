@@ -36,8 +36,8 @@ Privacy-first classroom companion for the web. Summarize, simplify, translate, a
 
 1. **Clone/download this repository**
    ```bash
-   git clone https://github.com/yourusername/quietclass-notes.git
-   cd quietclass-notes
+   git clone https://github.com/prabhakaran-jm/QuietClassNotes.git
+   cd QuietClassNotes
    ```
 
 2. **Replace placeholder icons** (optional but recommended)
@@ -47,7 +47,7 @@ Privacy-first classroom companion for the web. Summarize, simplify, translate, a
    - Open Chrome → Navigate to `chrome://extensions`
    - Toggle **Developer mode** (top-right corner)
    - Click **Load unpacked**
-   - Select the `quietclass-notes` folder
+   - Select the `QuietClassNotes` folder
 
 4. **Pin and activate**
    - Pin the extension to your toolbar
@@ -192,6 +192,100 @@ MIT License - see [LICENSE](LICENSE) file for details.
 - Built with Chrome Built-in AI (Gemini Nano)
 - Uses Chrome Extension Manifest V3
 - Inspired by privacy-first educational tools
+
+## 🧪 Testing Instructions for Judges
+
+### Prerequisites
+- Chrome 130+ (or Chrome Canary for latest experimental features)
+- Chrome Built-in AI enabled
+
+### Setup Steps
+
+1. **Enable Chrome Built-in AI:**
+   - Open Chrome
+   - Navigate to `chrome://flags`
+   - Search for "Chrome Built-in AI" or "Built-in AI"
+   - Enable the flag(s)
+   - **Restart Chrome** (required)
+
+2. **Load the Extension:**
+   - Open `chrome://extensions`
+   - Toggle **Developer mode** (top-right corner)
+   - Click **Load unpacked**
+   - Select the `QuietClassNotes` folder (this repository)
+
+3. **Verify Installation:**
+   - Extension icon should appear in Chrome toolbar
+   - Pin it for easy access
+   - Click icon or press `Ctrl+Shift+Y` to open side panel
+
+4. **Test Features:**
+
+   **Test Summarizer:**
+   - Visit any webpage with text (e.g., Wikipedia article or news site)
+   - Select a paragraph or multiple paragraphs
+   - Click the ✳️ **Summarize** chip that appears
+   - Verify summary appears in side panel (markdown format)
+
+   **Test Simplifier:**
+   - Select complex text on any webpage
+   - Click ✏️ **Simplify** chip
+   - Choose a mode (Beginner, Intermediate, Formal, or Casual)
+   - Click **Run** button
+   - Verify simplified/rewritten output appears
+
+   **Test Translator:**
+   - Select text in any language
+   - Click 🌐 **Translate** chip
+   - Choose target language from dropdown
+   - Click **Run**
+   - Verify translation appears with original text
+
+   **Test Proofreader:**
+   - Click extension icon to open side panel
+   - Go to **Proofread** tab
+   - Paste or type text with grammar errors
+   - Click **Run** or press `Ctrl+Enter`
+   - Verify corrections are shown with explanations
+
+### Troubleshooting
+
+**If APIs are not available:**
+1. Ensure Chrome Built-in AI flag is enabled and Chrome restarted
+2. Try Chrome Canary for latest experimental features
+3. Check API availability:
+   - Open DevTools (F12)
+   - Go to Console tab
+   - Run: `typeof Summarizer !== 'undefined'`
+   - Should return `true` if Summarizer API is available
+4. Note: Some APIs may require Chrome Canary or future releases
+5. Extension includes hybrid fallback mode for testing when APIs unavailable
+
+**If extension doesn't load:**
+- Ensure all files are in correct folder structure
+- Check for JavaScript errors in `chrome://extensions` → Extension details → Errors
+- Verify manifest.json is valid
+
+**If floating chips don't appear:**
+- Ensure text is actually selected (highlighted)
+- Check that content scripts are loaded (DevTools → Sources → Content scripts)
+- Try refreshing the webpage
+
+### Expected Behavior
+
+- ✅ Floating chips appear automatically when text is selected
+- ✅ Side panel opens automatically when chip is clicked
+- ✅ AI processing completes within 2-5 seconds
+- ✅ Results are displayed clearly in the side panel
+- ✅ Export options (JSON/Markdown) work correctly
+- ✅ Preferences (language, mode) are saved
+- ✅ Keyboard shortcuts work (`Ctrl+Enter` to run)
+
+### Additional Testing Resources
+
+For more detailed testing information, see:
+- [TEST_WITH_CANARY.md](TEST_WITH_CANARY.md) - Chrome Canary setup guide
+- [API_AVAILABILITY.md](API_AVAILABILITY.md) - API availability information
 
 ## 📞 Support
 

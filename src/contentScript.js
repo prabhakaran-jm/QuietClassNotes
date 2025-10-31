@@ -25,9 +25,12 @@ function createChips() {
     boxShadow: '0 4px 12px rgba(0,0,0,0.3)', backdropFilter: 'blur(8px)'
   });
 
-  const mk = (id, label) => {
+  const mk = (id, label, ariaLabel) => {
     const b = document.createElement('button');
-    b.id = id; b.textContent = label;
+    b.id = id;
+    b.textContent = label;
+    b.setAttribute('aria-label', ariaLabel || label);
+    b.setAttribute('role', 'button');
     Object.assign(b.style, { 
       background: 'transparent', 
       color: 'white', 
@@ -50,10 +53,10 @@ function createChips() {
   };
 
   wrap.append(
-    mk(IDS.SUM, '✳️ Summarize'),
-    mk(IDS.SIM, '✏️ Simplify'),
-    mk(IDS.TRN, '🌐 Translate'),
-    mk(IDS.PRF, '🧹 Proofread')
+    mk(IDS.SUM, '✳️ Summarize', 'Summarize selected text'),
+    mk(IDS.SIM, '✏️ Simplify', 'Simplify selected text for easier reading'),
+    mk(IDS.TRN, '🌐 Translate', 'Translate selected text'),
+    mk(IDS.PRF, '🧹 Proofread', 'Proofread selected text for grammar and clarity')
   );
   document.body.appendChild(wrap);
   return wrap;

@@ -12,17 +12,17 @@
       <span id="statusBadge" class="badge">Checking…</span>
     </div>
 
-    <div class="tabs">
-      <button class="tab active" data-tab="summarize">Summarize</button>
-      <button class="tab" data-tab="simplify">Simplify</button>
-      <button class="tab" data-tab="translate">Translate</button>
-      <button class="tab" data-tab="proofread">Proofread</button>
+    <div class="tabs" role="tablist">
+      <button class="tab active" data-tab="summarize" role="tab" aria-label="Summarize tab" aria-selected="true">Summarize</button>
+      <button class="tab" data-tab="simplify" role="tab" aria-label="Simplify tab" aria-selected="false">Simplify</button>
+      <button class="tab" data-tab="translate" role="tab" aria-label="Translate tab" aria-selected="false">Translate</button>
+      <button class="tab" data-tab="proofread" role="tab" aria-label="Proofread tab" aria-selected="false">Proofread</button>
       <span style="margin-left:auto"></span>
-      <label class="small"><input id="hybridToggle" type="checkbox" /> Hybrid</label>
+      <label class="small"><input id="hybridToggle" type="checkbox" aria-label="Enable hybrid mode for cloud fallback" /> Hybrid</label>
     </div>
 
     <div class="section">
-      <textarea id="input" class="textarea" placeholder="Paste or select text on the page and click a chip…"></textarea>
+      <textarea id="input" class="textarea" placeholder="Paste or select text on the page and click a chip…" aria-label="Input text for AI processing"></textarea>
       <div class="input-stats" id="inputStats">
         <span id="charCount">0</span> characters · <span id="wordCount">0</span> words
       </div>
@@ -30,7 +30,7 @@
       <!-- Options for Translate tab -->
       <div id="translateOptions" class="options" style="display: none;">
         <label class="small">Target Language:
-          <select id="targetLanguage" class="select">
+          <select id="targetLanguage" class="select" aria-label="Target language for translation">
             <option value="en">English</option>
             <option value="es">Spanish</option>
             <option value="fr">French</option>
@@ -48,7 +48,7 @@
       <!-- Options for Simplify tab -->
       <div id="simplifyOptions" class="options" style="display: none;">
         <label class="small">Mode:
-          <select id="rewriteMode" class="select">
+          <select id="rewriteMode" class="select" aria-label="Rewriting mode for simplification">
             <option value="beginner">Beginner</option>
             <option value="intermediate">Intermediate</option>
             <option value="formal">Formal</option>
@@ -58,22 +58,25 @@
       </div>
       
       <div class="actions">
-        <button id="run" class="button">
+        <button id="run" class="button" aria-label="Run AI processing">
           <span id="runText">Run</span>
-          <span id="runSpinner" class="spinner" style="display: none;"></span>
+          <span id="runSpinner" class="spinner" style="display: none;" aria-hidden="true"></span>
         </button>
-        <button id="clear" class="button secondary" title="Clear input">Clear</button>
-        <button id="copy" class="button">Copy Output</button>
-        <button id="useAsInput" class="button secondary" style="display: none;" title="Use output as new input">Use as Input</button>
-        <button id="export" class="button" style="display: none;">Export</button>
+        <button id="clear" class="button secondary" title="Clear input" aria-label="Clear input text">Clear</button>
+        <button id="copy" class="button" aria-label="Copy output to clipboard">Copy Output</button>
+        <button id="useAsInput" class="button secondary" style="display: none;" title="Use output as new input" aria-label="Use output as new input text">Use as Input</button>
+        <button id="export" class="button" style="display: none;" aria-label="Export output">Export</button>
       </div>
       <h4>Output</h4>
-      <div id="output" class="output"></div>
+      <div id="output" class="output" role="region" aria-label="AI processing output" aria-live="polite"></div>
     </div>
 
     <div class="footer">
       <span class="small">On-device by default. Toggle Hybrid to allow cloud fallback.</span>
       <span class="small" style="display: block; margin-top: 4px;">Press <kbd>Ctrl+Enter</kbd> to run</span>
+      <span class="small" style="display: block; margin-top: 8px;">
+        <a href="https://github.com/prabhakaran-jm/QuietClassNotes/issues" target="_blank" rel="noopener noreferrer" style="color: var(--link-color); text-decoration: underline;">Report Issue / Suggest Feature</a>
+      </span>
     </div>
 
     <script type="module" src="./index.js"></script>
