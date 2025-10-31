@@ -34,4 +34,5 @@ npm-debug.log*
 public/icons/create-icons.md
 public/icons/icon-generator.html
 API_AVAILABILITY.md
+TEST_WITH_CANARY.md
 
