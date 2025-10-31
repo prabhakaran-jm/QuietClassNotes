@@ -33,4 +33,5 @@ npm-debug.log*
 # Local helper files (not needed in repo)
 public/icons/create-icons.md
 public/icons/icon-generator.html
+API_AVAILABILITY.md
 
