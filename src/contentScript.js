@@ -113,12 +113,13 @@ wrap.addEventListener('click', (e) => {
   
   console.log('[QCN] Chip clicked:', id, 'Text:', text.substring(0, 50));
   
-  // Send selected text with the tab to activate
+  // Send selected text with the tab to activate and request side panel open
   const tabToActivate = CHIP_TO_TAB[id];
   chrome.runtime.sendMessage({ 
     type: 'QCN_SELECTED_TEXT', 
     text,
-    tab: tabToActivate
+    tab: tabToActivate,
+    openSidePanel: true  // Request side panel to open
   }, (response) => {
     if (chrome.runtime.lastError) {
       console.error('[QCN] Message error:', chrome.runtime.lastError);
@@ -126,16 +127,5 @@ wrap.addEventListener('click', (e) => {
       console.log('[QCN] Message sent:', response);
     }
   });
-  
-  // Open side panel
-  chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
-    .then(() => {
-      console.log('[QCN] Side panel opened');
-    })
-    .catch((err) => {
-      console.error('[QCN] Failed to open side panel:', err);
-      // Fallback: try opening via extension action
-      chrome.runtime.sendMessage({ type: 'QCN_OPEN_SIDE_PANEL' });
-    });
 });
 

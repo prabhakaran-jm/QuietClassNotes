@@ -17,15 +17,34 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       console.error('[QCN Service Worker] Storage error:', err);
     });
     
+    // Open side panel if requested (sidePanel API must be called from service worker)
+    if (message.openSidePanel) {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs[0]) {
+          chrome.sidePanel.open({ windowId: tabs[0].windowId })
+            .then(() => {
+              console.log('[QCN Service Worker] Side panel opened');
+            })
+            .catch((err) => {
+              console.error('[QCN Service Worker] Failed to open side panel:', err);
+            });
+        }
+      });
+    }
+    
     sendResponse({ success: true });
     return true; // Keep channel open for async response
   }
   
   if (message.type === 'QCN_OPEN_SIDE_PANEL') {
     // Fallback: try to open side panel from service worker
-    chrome.sidePanel.open({ windowId: sender.tab?.windowId })
-      .then(() => console.log('[QCN Service Worker] Side panel opened'))
-      .catch((err) => console.error('[QCN Service Worker] Failed to open side panel:', err));
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      if (tabs[0]) {
+        chrome.sidePanel.open({ windowId: tabs[0].windowId })
+          .then(() => console.log('[QCN Service Worker] Side panel opened'))
+          .catch((err) => console.error('[QCN Service Worker] Failed to open side panel:', err));
+      }
+    });
     sendResponse({ success: true });
     return true;
   }
