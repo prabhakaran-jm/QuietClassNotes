@@ -73,8 +73,12 @@ function showToast(message, type = 'info') {
 }
 
 tabs.forEach(t => t.addEventListener('click', () => {
-  tabs.forEach(x => x.classList.remove('active'));
+  tabs.forEach(x => {
+    x.classList.remove('active');
+    x.setAttribute('aria-selected', 'false');
+  });
   t.classList.add('active');
+  t.setAttribute('aria-selected', 'true');
   activeTab = t.dataset.tab;
   updateTabUI();
 }));
