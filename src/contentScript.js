@@ -114,8 +114,15 @@ wrap.addEventListener('click', (e) => {
   console.log('[QCN] Chip clicked:', id, 'Text:', text.substring(0, 50));
   
   // Check if extension runtime is available
-  if (!chrome?.runtime) {
+  if (typeof chrome === 'undefined' || !chrome.runtime) {
     console.error('[QCN] Extension runtime not available. Please reload the page after reloading the extension.');
+    alert('Extension context invalidated. Please reload this page (F5) to reconnect.');
+    return;
+  }
+  
+  // Double-check sendMessage exists
+  if (typeof chrome.runtime.sendMessage !== 'function') {
+    console.error('[QCN] chrome.runtime.sendMessage is not a function. Please reload the page.');
     alert('Extension context invalidated. Please reload this page (F5) to reconnect.');
     return;
   }
