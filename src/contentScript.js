@@ -96,10 +96,22 @@ function sendSelectedText() {
 }
 
 wrap.addEventListener('click', (e) => {
-  const id = e.target?.id;
-  if (!id || !CHIP_TO_TAB[id]) return;
+  e.stopPropagation(); // Prevent event bubbling
+  e.preventDefault(); // Prevent default behavior
+  
+  const id = e.target?.id || e.target.closest('button')?.id;
+  if (!id || !CHIP_TO_TAB[id]) {
+    console.log('[QCN] No valid chip ID:', id);
+    return;
+  }
+  
   const text = getSelectionText();
-  if (!text) return;
+  if (!text) {
+    console.log('[QCN] No text selected');
+    return;
+  }
+  
+  console.log('[QCN] Chip clicked:', id, 'Text:', text.substring(0, 50));
   
   // Send selected text with the tab to activate
   const tabToActivate = CHIP_TO_TAB[id];
@@ -107,9 +119,23 @@ wrap.addEventListener('click', (e) => {
     type: 'QCN_SELECTED_TEXT', 
     text,
     tab: tabToActivate
+  }, (response) => {
+    if (chrome.runtime.lastError) {
+      console.error('[QCN] Message error:', chrome.runtime.lastError);
+    } else {
+      console.log('[QCN] Message sent:', response);
+    }
   });
   
   // Open side panel
-  chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT }).catch(()=>{});
+  chrome.sidePanel.open({ windowId: chrome.windows.WINDOW_ID_CURRENT })
+    .then(() => {
+      console.log('[QCN] Side panel opened');
+    })
+    .catch((err) => {
+      console.error('[QCN] Failed to open side panel:', err);
+      // Fallback: try opening via extension action
+      chrome.runtime.sendMessage({ type: 'QCN_OPEN_SIDE_PANEL' });
+    });
 });
 
