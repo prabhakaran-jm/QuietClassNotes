@@ -4,17 +4,33 @@ chrome.runtime.onInstalled.addListener(() => {
 
 // Handle messages from content script and store for side panel
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log('[QCN Service Worker] Received message:', message.type);
+  
   if (message.type === 'QCN_SELECTED_TEXT') {
     // Store the selected text and tab so side panel can retrieve it
     chrome.storage.local.set({ 
       lastSelectedText: message.text,
       lastSelectedTab: message.tab || null
-    }).catch(() => {});
-    // Also try to send directly if side panel is listening
-    chrome.runtime.sendMessage(message).catch(() => {});
+    }).then(() => {
+      console.log('[QCN Service Worker] Stored text and tab');
+    }).catch((err) => {
+      console.error('[QCN Service Worker] Storage error:', err);
+    });
+    
     sendResponse({ success: true });
+    return true; // Keep channel open for async response
   }
-  return true; // Keep channel open for async response
+  
+  if (message.type === 'QCN_OPEN_SIDE_PANEL') {
+    // Fallback: try to open side panel from service worker
+    chrome.sidePanel.open({ windowId: sender.tab?.windowId })
+      .then(() => console.log('[QCN Service Worker] Side panel opened'))
+      .catch((err) => console.error('[QCN Service Worker] Failed to open side panel:', err));
+    sendResponse({ success: true });
+    return true;
+  }
+  
+  return false;
 });
 
 // For future: handle context-menu or keyboard shortcuts
