@@ -34,20 +34,46 @@ export async function rewrite(text, { mode = 'beginner', hybrid } = {}) {
   }
   
   // Map UI mode to Rewriter API tone enum value
-  const tone = MODE_TO_TONE[mode] || 'simplify'; // Default to 'simplify' if unknown
+  // Try to infer the correct enum value - API might use different values
+  let tone = MODE_TO_TONE[mode];
+  
+  // If mode not in mapping, log warning and default
+  if (!tone) {
+    console.warn(`[Rewriter] Unknown mode '${mode}', defaulting to 'simplify'`);
+    tone = 'simplify';
+  }
+  
+  console.log(`[Rewriter] UI Mode: '${mode}' → API Tone: '${tone}'`);
   
   try {
+    console.log(`[Rewriter] Creating with tone: ${tone}`);
     const rewriter = await Rewriter.create({ tone });
+    console.log(`[Rewriter] Created successfully, rewriting text...`);
     return await rewriter.rewrite(text);
   } catch (e) {
-    // If first tone fails, try alternative mapping
-    if (mode === 'beginner' && e.message?.includes('enum')) {
-      // Try 'simplify' directly if 'beginner' mapping failed
-      try {
-        const rewriter = await Rewriter.create({ tone: 'simplify' });
-        return await rewriter.rewrite(text);
-      } catch (e2) {
-        // Fall through to hybrid/error handling
+    console.error(`[Rewriter] Failed with tone '${tone}':`, e.message);
+    
+    // Try alternative tone values if enum error
+    if (e.message?.includes('enum') || e.message?.includes('not a valid')) {
+      const alternatives = {
+        'beginner': ['simplify', 'formalize', 'casualize'],
+        'intermediate': ['formalize', 'simplify', 'casualize'],
+        'formal': ['formalize', 'simplify'],
+        'casual': ['casualize', 'simplify', 'formalize']
+      };
+      
+      const altTones = alternatives[mode] || ['simplify', 'formalize', 'casualize'];
+      
+      for (const altTone of altTones) {
+        if (altTone === tone) continue; // Skip if already tried
+        try {
+          console.log(`[Rewriter] Trying alternative tone: ${altTone}`);
+          const rewriter = await Rewriter.create({ tone: altTone });
+          return await rewriter.rewrite(text);
+        } catch (e2) {
+          console.log(`[Rewriter] Alternative tone '${altTone}' also failed`);
+          continue;
+        }
       }
     }
     
