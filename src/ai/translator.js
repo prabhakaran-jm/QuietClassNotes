@@ -1,14 +1,32 @@
 export async function translate(text, { target = 'en', hybrid } = {}) {
   // Check for translator API - it might be navigator.translator or window.translator
-  const translator = navigator.translator || window.translator;
+  // Also check if it's available through different paths
+  let translator = navigator.translator;
+  
+  if (!translator && typeof window !== 'undefined') {
+    translator = window.translator;
+  }
+  
+  // Try to access via globalThis if available
+  if (!translator && typeof globalThis !== 'undefined') {
+    translator = globalThis.translator || globalThis.navigator?.translator;
+  }
+  
+  console.log('[Translator] Checking availability...', {
+    'navigator.translator': !!navigator.translator,
+    'window.translator': typeof window !== 'undefined' ? !!window.translator : 'N/A',
+    'translator found': !!translator
+  });
   
   if (!translator) {
-    console.log('[Translator] navigator.translator not available');
+    console.log('[Translator] navigator.translator not available in this Chrome build');
+    console.log('[Translator] Note: Translator API is only available in Chrome Canary/Dev builds or with specific flags enabled');
     if (hybrid) {
+      console.log('[Translator] Using hybrid cloud fallback...');
       const hybridModule = await import('./hybrid.js');
       return hybridModule.translateCloud(text, target);
     }
-    throw new Error('AI feature not available.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Ensure Chrome Built-in AI is enabled\n• Check your Chrome version (requires Chrome 130+)');
+    throw new Error('AI feature not available.\n\nTry:\n• Enable Hybrid mode for cloud fallback\n• Ensure Chrome Built-in AI is enabled\n• Check your Chrome version (requires Chrome 130+)\n• Translator API may require Chrome Canary or Dev build');
   }
   
   try {

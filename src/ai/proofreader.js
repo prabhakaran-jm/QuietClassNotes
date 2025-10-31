@@ -28,18 +28,32 @@ export async function proofread(text, { hybrid } = {}) {
   try {
     console.log('[Proofreader] Creating proofreader...');
     const proof = await Proofreader.create();
-    console.log('[Proofreader] Proofreading text...');
+    console.log('[Proofreader] Proofreading text...', { textLength: text.length });
     
-    // Add timeout for proofreading operation (reduced to 15 seconds for faster feedback)
+    // Add timeout for proofreading operation (reduced to 10 seconds for faster feedback)
     let timeoutId;
+    let timeoutFired = false;
     const timeoutPromise = new Promise((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('Proofreading timeout after 15 seconds')), 15000);
+      timeoutId = setTimeout(() => {
+        timeoutFired = true;
+        reject(new Error('Proofreading timeout after 10 seconds'));
+      }, 10000);
     });
     
     try {
       const proofreadPromise = proof.proofread(text);
-      const res = await Promise.race([proofreadPromise, timeoutPromise]);
-      clearTimeout(timeoutId); // Clear timeout if successful
+      
+      // Use Promise.race to catch timeout
+      const res = await Promise.race([
+        proofreadPromise.then(result => {
+          if (!timeoutFired) {
+            clearTimeout(timeoutId);
+            return result;
+          }
+          throw new Error('Operation was cancelled due to timeout');
+        }),
+        timeoutPromise
+      ]);
       
       console.log('[Proofreader] Result received:', res);
       
@@ -52,19 +66,20 @@ export async function proofread(text, { hybrid } = {}) {
       }
       return typeof res === 'string' ? res : JSON.stringify(res, null, 2);
     } catch (raceError) {
-      clearTimeout(timeoutId);
+      if (timeoutId) clearTimeout(timeoutId);
       throw raceError;
     }
   } catch (e) {
-    console.error('[Proofreader] Error:', e.message);
+    console.error('[Proofreader] Error:', e.message, e);
     
     if (e.message?.includes('timeout')) {
+      console.log('[Proofreader] Timeout occurred, checking hybrid mode...');
       if (hybrid) {
-        console.log('[Proofreader] Timing out, trying cloud fallback...');
+        console.log('[Proofreader] Trying cloud fallback...');
         const hybridModule = await import('./hybrid.js');
         return hybridModule.proofreadCloud(text);
       }
-      throw new Error('Proofreading timed out after 15 seconds. The text might be too long, or the API is not responding.\n\nEnable Hybrid mode for cloud fallback or try with shorter text.');
+      throw new Error('Proofreading timed out after 10 seconds. The text might be too long, or the API is not responding.\n\nEnable Hybrid mode for cloud fallback or try with shorter text.');
     }
     
     if (hybrid) {
