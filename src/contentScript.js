@@ -92,7 +92,19 @@ document.addEventListener('mousedown', (e) => {
 function sendSelectedText() {
   const text = getSelectionText();
   if (!text) return;
-  chrome.runtime.sendMessage({ type: 'QCN_SELECTED_TEXT', text });
+  
+  // Check if extension runtime is available
+  if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.sendMessage !== 'function') {
+    // Extension context invalidated - silent fail for selection tracking
+    return;
+  }
+  
+  chrome.runtime.sendMessage({ type: 'QCN_SELECTED_TEXT', text }, (response) => {
+    if (chrome.runtime.lastError) {
+      // Context invalidated - silent fail for selection tracking
+      return;
+    }
+  });
 }
 
 wrap.addEventListener('click', (e) => {
